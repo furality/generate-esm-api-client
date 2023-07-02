@@ -1,0 +1,80 @@
+name: 'Generate OpenAPI api client'
+description: 'Generate typescript OpenAPI esm client using openapi-generator published to Github'
+inputs:
+  author:
+    description: 'Package author'
+    required: true
+    default: 'User'
+  package_name:
+    description: 'Package name'
+    required: true
+    default: 'api-client'
+  spec_file:
+    description: "OpenAPI specification"
+    required: false
+    default: 'api-spec.json'
+  repo_url:
+    description: 'Repository url'
+    required: false
+  archive_client:
+    description: "Upload archive of client source"
+    required: false
+    default: "false"
+  license:
+    description: "Package license"
+    required: false
+    default: "UNLICENSED"
+  snapshot:
+    description: "Add snapshot timestamp to versions"
+    required: false
+    default: "false"
+  npm_registry:
+    description: "NPM registry"
+    required: false
+    default: "https://npm.pkg.github.com"
+  npm_token:
+    description: "NPM token (enables publishing)"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate client source
+      env:
+        GIT_REPO_URL: ${{ inputs.repo_url }}
+        AUTHOR: ${{ inputs.author }}
+        LICENSE: ${{ inputs.license }}
+      run: |
+        npx --yes @openapitools/openapi-generator-cli generate -i ${{ inputs.spec_file }} -g typescript-axios -o ./client --additional-properties=npmName=${{ inputs.package_name }} --additional-properties=npmRepository=${{ inputs.npm_registry }} --additional-properties=withSeparateModelsAndApi=true --additional-properties=modelPackage=models --additional-properties=apiPackage=apis ${{ inputs.snapshot == 'true' && '--additional-properties=snapshot=true' || '' }}
+        node ${{ github.action_path }}/sanitizeGeneratedClient.mjs
+      shell: bash
+
+    - name: Archive client source
+      if: ${{ inputs.archive_client == 'true' }}
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: client
+        path: client
+
+    - name: Cache client dependencies
+      if: ${{ inputs.npm_token != 'false' }}
+      uses: actions/setup-node@v3
+      with:
+        cache-dependency-path: ./client/package-lock.json
+        registry-url: ${{ inputs.npm_registry }}
+        node-version: '18.x'
+
+    - name: Install build dependencies
+      if: ${{ inputs.npm_token != 'false' }}
+      working-directory: ./client
+      run: npm install
+      shell: bash
+
+    - name: Publish client
+      if: ${{ inputs.npm_token != 'false' }}
+      working-directory: ./client
+      run: npm publish
+      shell: bash
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.npm_token }}
