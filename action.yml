@@ -1,5 +1,5 @@
-name: 'Generate OpenAPI api client'
-description: 'Generate typescript OpenAPI esm client using openapi-generator published to Github'
+name: 'Generate OpenAPI axios api client'
+description: 'Generate typescript OpenAPI axios esm client using openapi-generator published to Github'
 inputs:
   author:
     description: 'Package author'
@@ -40,14 +40,17 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Generate client source
+    - name: Generate client
+      uses: docker://openapitools/openapi-generator-cli:v6.6.0
+      with:
+        args: generate -i ${{ inputs.spec_file }} -g typescript-axios -o ./client --additional-properties=npmName=${{ inputs.package_name }} --additional-properties=npmRepository=${{ inputs.npm_registry }} --additional-properties=withSeparateModelsAndApi=true --additional-properties=modelPackage=models --additional-properties=apiPackage=apis ${{ inputs.snapshot == 'true' && '--additional-properties=snapshot=true' || '' }}
+
+    - name: Sanitize client
       env:
         GIT_REPO_URL: ${{ inputs.repo_url }}
         AUTHOR: ${{ inputs.author }}
         LICENSE: ${{ inputs.license }}
-      run: |
-        npx --yes @openapitools/openapi-generator-cli generate -i ${{ inputs.spec_file }} -g typescript-axios -o ./client --additional-properties=npmName=${{ inputs.package_name }} --additional-properties=npmRepository=${{ inputs.npm_registry }} --additional-properties=withSeparateModelsAndApi=true --additional-properties=modelPackage=models --additional-properties=apiPackage=apis ${{ inputs.snapshot == 'true' && '--additional-properties=snapshot=true' || '' }}
-        node ${{ github.action_path }}/sanitizeGeneratedClient.mjs
+      run: node ${{ github.action_path }}/sanitizeGeneratedClient.mjs
       shell: bash
 
     - name: Archive client source
