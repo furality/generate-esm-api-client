@@ -50,7 +50,9 @@ runs:
         GIT_REPO_URL: ${{ inputs.repo_url }}
         AUTHOR: ${{ inputs.author }}
         LICENSE: ${{ inputs.license }}
-      run: node ${{ github.action_path }}/sanitizeGeneratedClient.mjs
+      run: |
+        sudo chown -R $USER ./client
+        node ${{ github.action_path }}/sanitizeGeneratedClient.mjs
       shell: bash
 
     - name: Archive client source
