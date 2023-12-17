@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import process from 'node:process';
 import path from 'node:path';
 
+import stubPackageJson from "./package.json" assert { type: "json" };
+
 const WORK_DIR = './client';
 
 const ifProvided = (value) => {
@@ -19,10 +21,14 @@ const sanitizePackageJson = async () => {
   dirtyPackageJson.module = './dist/index.js';
   dirtyPackageJson.sideEffects = false;
 
-  dirtyPackageJson.dependencies.axios = '^1.4.0';
-  // cloudflare pages configured to node 18, don't use higher versions
-  dirtyPackageJson.devDependencies['@types/node'] = '^18.16.17';
-  dirtyPackageJson.devDependencies['typescript'] = '^5.1.6';
+  dirtyPackageJson.dependencies = {
+    ...dirtyPackageJson.dependencies,
+    ...stubPackageJson.dependencies
+  };
+  dirtyPackageJson.devDependencies = {
+    ...dirtyPackageJson.devDependencies,
+    ...stubPackageJson.devDependencies
+  };
 
   if (GIT_REPO_URL === undefined) {
     delete dirtyPackageJson.repository;
