@@ -13,7 +13,7 @@
   },
   "homepage": "https://github.com/TheChristophe/generate-esm-api-client#readme",
   "devDependencies": {
-    "@types/node": "^20.11.5",
+    "@types/node": "^20.11.24",
     "typescript": "^5.3.3"
   },
   "dependencies": {
