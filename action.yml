@@ -57,18 +57,18 @@ runs:
 
     - name: Archive client source
       if: ${{ inputs.archive_client == 'true' }}
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v4
       with:
         name: client
         path: client
 
     - name: Cache client dependencies
       if: ${{ inputs.npm_token != 'false' }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         cache-dependency-path: ./client/package-lock.json
         registry-url: ${{ inputs.npm_registry }}
-        node-version: '18.x'
+        node-version: '22.x'
 
     - name: Install build dependencies
       if: ${{ inputs.npm_token != 'false' }}
