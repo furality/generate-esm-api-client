@@ -41,7 +41,7 @@ runs:
   using: "composite"
   steps:
     - name: Generate client
-      uses: docker://openapitools/openapi-generator-cli:v6.6.0
+      uses: docker://openapitools/openapi-generator-cli:v7.11.0
       with:
         args: generate -i ${{ inputs.spec_file }} -g typescript-axios -o ./client --additional-properties=npmName=${{ inputs.package_name }} --additional-properties=npmRepository=${{ inputs.npm_registry }} --additional-properties=withSeparateModelsAndApi=true --additional-properties=modelPackage=models --additional-properties=apiPackage=apis --additional-properties=useSingleRequestParameter=true ${{ inputs.snapshot == 'true' && '--additional-properties=snapshot=true' || '' }}
 
