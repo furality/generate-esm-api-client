@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import process from 'node:process';
 import path from 'node:path';
 
-import stubPackageJson from "./package.json" assert { type: "json" };
+import stubPackageJson from "./package.json" with { type: "json" };
 
 const WORK_DIR = './client';
 
