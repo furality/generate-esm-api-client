@@ -105,8 +105,33 @@ const sanitizeTsImports = async () => {
   }
 }
 
+// axios >=1.19.0 defaults request<T, R>()'s R to a non-exported `unique symbol`,
+// which breaks declaration emit for the generated createRequestFunction (TS2527).
+// Mirrors the upstream fix (OpenAPITools/openapi-generator#24526) until the
+// pinned generator image ships it.
+const patchCreateRequestFunction = async () => {
+  const commonTs = `${WORK_DIR}/common.ts`;
+  if (!fs.existsSync(commonTs)) {
+    return;
+  }
+
+  const source = fs.readFileSync(commonTs, 'utf8');
+  const patched = source
+      .replace(
+          /(return <T = unknown, R = AxiosResponse<T>>\(axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH\))\s*=>\s*\{/,
+          '$1: Promise<R> => {')
+      .replace(
+          /return axios\.request<T, R>\(axiosRequestArgs\);/,
+          'return axios.request<T, R>(axiosRequestArgs) as Promise<R>;');
+
+  if (patched !== source) {
+    fs.writeFileSync(commonTs, patched, 'utf8');
+  }
+};
+
 await Promise.all([
   sanitizePackageJson(),
   sanitizeTsConfig(),
   sanitizeTsImports(),
 ]);
+await patchCreateRequestFunction();
